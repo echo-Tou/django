@@ -1,0 +1,19 @@
+{% load static %}
+
+<h1>hello {{ name }}</h1>
+
+{# for循环 #}
+{% for item in list_data %}
+    <li>{{ item }}</li>
+
+    {# if判断 #}
+    {% if forloop.first %}
+        this is first
+    {% elif  forloop.last %}
+        this is last
+    {% endif %}
+
+{% endfor %}
+
+
+<img src="{% static 'images/1.png' %}">

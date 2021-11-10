@@ -1,0 +1,13 @@
+{% load myfilter %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>django</title>
+</head>
+<body>
+   add: {{ count|add:10}}
+   <br>
+   自定义过滤: {{ count|test_filter:10}}
+</body>
+</html> 
