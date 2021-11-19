@@ -1,6 +1,6 @@
 from django.urls import path
 from django.urls.conf import include
-from .views import index, cart
+from .views import index, cart, orders
 
 urlpatterns = [
   path('', index.index, name='index'),
@@ -17,6 +17,18 @@ urlpatterns = [
 
     # 购物车信息管理路由
     path('cart/add/<str:pid>',cart.add, name='web_cart_add'),
+    path('cart/delete/<str:pid>',cart.delete, name='web_cart_delete'),
+    path('cart/clear',cart.clear, name='web_cart_clear'),
+    path('cart/change',cart.change, name='web_cart_change'),
+
+    # 订单信息管理路由
+    path('orders/<int:pIndex>',orders.index, name='web_orders_index'),
+
+    # web_orders_insert
+    path('orders/<int:pIndex>', orders.index, name="web_orders_index"), #浏览订单
+    path('orders/insert',orders.insert, name='web_orders_insert'),
+    path('orders/detail',orders.detail, name='web_orders_detail'),
+    path('orders/status',orders.status, name='web_orders_status'),
     
 
   ]))

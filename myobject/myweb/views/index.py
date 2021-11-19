@@ -17,6 +17,13 @@ def index(request):
 
 def webindex(request):
     '''项目前台大堂点餐首页'''
+    #获取购物车中菜品信息
+    cartlist = request.session.get("cartlist",{})
+    total_money = 0 #初始化一个总金额变量
+    #遍历购物车中菜品，并累计统计总金额
+    for vo in cartlist.values():
+        total_money = total_money + vo['num'] * vo['price']
+    request.session["total_money"] = total_money #将总金额存放到session中
 
     # 将session中的菜品和类别信息获取并items转换,可实现for in 的遍历
     context = {'categorylist': request.session.get('categorylist',{}).items()}
@@ -62,11 +69,9 @@ def dologin(request):
                 print('登录成功')
                 # 将当前登录成功的用户信息以webuser为key写入到session中
                 request.session['webuser'] = user.toDict()
-
                 # 获取当前店铺信息
                 shopob = Shop.objects.get(id=request.POST['shop_id'])
                 request.session['shopinfo'] = shopob.toDict()
-
                 # 获取当前店铺中所有的菜品类别和菜品信息
                 clist = Category.objects.filter(shop_id = shopob.id, status=1)
                 categorylist = dict() #菜品类别(内含有菜品信息)

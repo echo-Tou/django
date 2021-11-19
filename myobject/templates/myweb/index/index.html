@@ -52,9 +52,10 @@
         </div>
         <div id="navbar" class="navbar-collapse collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="#">堂吃点餐</a></li>
-            <li><a href="#about">当前订单</a></li>
-            <li><a href="#contact">历史订单</a></li>
+            <li><a href="{% url 'web_index' %}">堂吃点餐</a></li>
+            <li {% if request.GET.status == '1' %}class="active"{% endif %}><a href="{% url 'web_orders_index' 1 %}?status=1">当前订单</a></li>
+            <li {% if request.GET.status == '3' %}class="active"{% endif %}><a href="{% url 'web_orders_index' 1 %}?status=3">历史订单</a></li>
+            <li {% if request.GET.status == '2' %}class="active"{% endif %}><a href="{% url 'web_orders_index' 1 %}?status=2">无效订单</a></li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li><a href="../navbar/">
@@ -79,34 +80,20 @@
                             <th width="45">单价</th>
                             <th>删除</th>
                         </tr>
+                        {% for product in request.session.cartlist.values %}
+                        
                         <tr>
-                            <td>1</td>
-                            <td>梅菜扣肉+番茄鸡蛋</td>
-                            <td class="num"><i class="btn btn-default btn-xs"> - </i><span>1</span><i class="btn btn-default btn-xs"> + </i></td>
-                            <td class="price">38.00</td>
-                            <td><a href="#" class="btn btn-danger btn-xs" role="button">删除</a></td>
+                            <td>{{forloop.counter}}</td>
+                            <td>{{ product.name}}</td>
+                            <td class="num">
+                              <i onclick="window.location='{% url 'web_cart_change' %}?pid={{product.id}}&num={{product.num|add:-1}}'" class="btn btn-default btn-xs"> - </i><span>
+                              {{product.num}}
+                              </span><i onclick="window.location='{% url 'web_cart_change' %}?pid={{product.id}}&num={{product.num|add:1}}'" class="btn btn-default btn-xs"> + </i>
+                          </td>
+                            <td class="price">{{product.price}}</td>
+                            <td><a href="{% url 'web_cart_delete' product.id %}" class=btn btn-danger btn-xs" role="button">删除</a></td>
                         </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>梅菜扣肉</td>
-                            <td class="num"><i class="btn btn-default btn-xs"> - </i><span>1</span><i class="btn btn-default btn-xs"> + </i></td>
-                            <td class="price">25.00</td>
-                            <td><a href="#" class="btn btn-danger btn-xs" role="button">删除</a></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>梅菜扣肉</td>
-                            <td class="num"><i class="btn btn-default btn-xs"> - </i><span>1</span><i class="btn btn-default btn-xs"> + </i></td>
-                            <td class="price">25.00</td>
-                            <td><a href="#" class="btn btn-danger btn-xs" role="button">删除</a></td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>梅菜扣肉</td>
-                            <td class="num"><i class="btn btn-default btn-xs"> - </i><span>1</span><i class="btn btn-default btn-xs"> + </i></td>
-                            <td class="price">25.00</td>
-                            <td><a href="#" class="btn btn-danger btn-xs" role="button">删除</a></td>
-                        </tr>
+                        {% endfor %}
                     </table>
                     
                     <li class="list-group-item">
@@ -122,8 +109,9 @@
                     </li>
 
                     <div class="panel-footer" style="height:50px">
-                        <div style="width:120px;float:left;margin:5px 0px;">合计：￥<span style="color:red;font-weight:bold;">168.00</span> 元</div>
-                        <button type="submit" class="btn btn-warning" style="width:130px;float:right">结 &nbsp; 算</button>
+                        <div style="width:120px;float:left;margin:5px 0px;">合计：￥<span style="color:red;font-weight:bold;">{{ request.session.total_money }}</span> 元</div>
+                        <button type="submit" onclick="dosubmit()" class="btn btn-warning" style="width:80px;float:right">结 &nbsp; 算</button>
+                        <a href="{% url 'web_cart_clear' %}" class="btn btn-danger" style="width:60px;float:right;right:30px;">清&nbsp;空</a>
                     </div>
              
             </div>
@@ -140,7 +128,7 @@
                       <div class="caption">
                         <h6>{{ product.name }}</h6>
                         <div class="bn">￥<span class="price">{{ product.price }}</span>元</a>
-                        <a href="#" class="btn btn-warning btn-xs pull-right" role="button"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> 购买</a></div>
+                        <a href="{% url 'web_cart_add' product.id %}" class="btn btn-warning btn-xs pull-right" role="button"><span class="glyphicon glyphicon-shopping-cart" aria-hidden="true"></span> 购买</a></div>
                       </div>
                     </div>
                 </div>
@@ -154,6 +142,40 @@
 
     <script src="{% static 'myweb/js/jquery.min.js' %}"></script>
     <script src="{% static 'myweb/js/bootstrap.min.js' %}"></script>
+    <script>
+      //执行订单处理
+      function dosubmit(){
+        // 判断购物车中是否没有菜品
+        if ($("table.table-striped tr").length == 1){
+          alert('请先选择菜品!');
+          return;
+        }
+        //询问是否提交订单
+        if(!window.confirm('确定要进行结算吗')){
+          return;
+        }
+        alert('提交订单!');
+        // 获取要提交的数据
+        var ptype = $("input[name='ptype']:checked").val();
+        var bank = $("input[name=bank]:checked").val();
+        // alert(ptype+":"bank);
+        // 执行ajax提交订单
+        $.ajax({
+          type:'get',
+          url:"{% url 'web_orders_insert' %}",
+          datatype: "text",
+          data:{ptype:ptype,bank:bank},
+          success:function(res){
+            if(res == 'Y'){
+              alert("订单添加成功!")
+              window.location.href = "{% url 'web_index' %}";
+            }else
+              alert('订单添加失败!')
+          }
+        }
+        )
+      }
+    </script>
 
 </body>
 </html>
